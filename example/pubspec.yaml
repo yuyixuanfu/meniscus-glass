@@ -1,0 +1,20 @@
+name: meniscus_example
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meniscus:
+    path: ..
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/backdrop.png
