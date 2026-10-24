@@ -5,6 +5,8 @@ Flutter 的液体玻璃。一个片段着色器直接采样页面背景图，把
 Liquid glass for Flutter. A fragment shader samples the page backdrop and bends it along the edge
 the way real glass refracts, while the middle stays clear.
 
+<img src="docs/screenshot.jpg" width="360" alt="meniscus on an Android phone">
+
 ## 用法 / Usage
 
 ```yaml
@@ -52,6 +54,14 @@ const LensGlass(radius: 26, live: true, child: SizedBox(height: 52));
 cd example
 flutter run
 ```
+
+手机上整屏是一段对话，右上角按钮打开设置：换底片、调圆角和膜厚、开关读背后真实画面。电脑上手机框放在中间，设置在旁边。
+网页版能跑，但浏览器不支持读背后真实画面，浮着的玻璃只弯底片，效果比手机差一档。
+
+On a phone the demo is a conversation; the top-right button opens the controls (backdrop, corner
+radius, film, live backdrop). On a wide screen the phone sits in a frame with the controls beside it.
+The web build runs, but browsers cannot read the live backdrop, so floating glass bends only the
+backdrop image.
 
 ## 许可 / License
 
