@@ -38,6 +38,7 @@ const LensGlass(radius: 26, live: true, child: SizedBox(height: 52));
 |---|---|
 | `radius` | 圆角 / corner radius |
 | `tint` | 膜色，alpha 是膜厚 / film colour, alpha is its thickness |
+| `refraction` | `Refraction.lens`(默认)：斜面最宽 37、最多到短边一半，矮的面整块都是透镜，边缘会翻折；`Refraction.edge`：只有贴边一圈斜面(最宽 18)在弯，中间是平的。两种感觉不同，按喜好选 / `lens` (default): bevel up to 37 px or half the short side, small surfaces refract across their whole width and the rim folds; `edge`: only a rim up to 18 px bends, the middle stays flat |
 | `live` | `true` 时读背后的真实画面，需要 `ImageFilter.isShaderFilterSupported`(Impeller)；不支持时退回采样 `GlassBackdrop` 的图 / reads the live backdrop; needs Impeller, otherwise falls back to the `GlassBackdrop` image |
 
 ## 限制 / Limitations

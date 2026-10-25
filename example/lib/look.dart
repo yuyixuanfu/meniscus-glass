@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:meniscus/meniscus.dart';
 
 enum Backdrop {
   sea('Sea', Color(0xFF0D3F8A), Color(0xFFF4F7FB)),
@@ -17,19 +18,27 @@ enum Backdrop {
 
 @immutable
 class Look {
-  const Look({this.backdrop = Backdrop.clouds, this.radius = 20, this.film = .05, this.live = true});
+  const Look({
+    this.backdrop = Backdrop.clouds,
+    this.radius = 20,
+    this.film = .05,
+    this.live = true,
+    this.refraction = Refraction.lens,
+  });
 
   final Backdrop backdrop;
   final double radius;
   final double film;
   final bool live;
+  final Refraction refraction;
 
   Color get tint => Color.fromRGBO(255, 255, 255, film);
 
-  Look copyWith({Backdrop? backdrop, double? radius, double? film, bool? live}) => Look(
-        backdrop: backdrop ?? this.backdrop,
-        radius: radius ?? this.radius,
-        film: film ?? this.film,
-        live: live ?? this.live,
-      );
+  Look copyWith({Backdrop? backdrop, double? radius, double? film, bool? live, Refraction? refraction}) => Look(
+    backdrop: backdrop ?? this.backdrop,
+    radius: radius ?? this.radius,
+    film: film ?? this.film,
+    live: live ?? this.live,
+    refraction: refraction ?? this.refraction,
+  );
 }

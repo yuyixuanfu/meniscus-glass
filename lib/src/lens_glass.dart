@@ -7,48 +7,65 @@ import 'package:flutter/widgets.dart';
 
 import 'glass_backdrop.dart';
 
+enum Refraction { lens, edge }
+
 class LensGlass extends SingleChildRenderObjectWidget {
   const LensGlass({
     super.key,
     this.radius = 20,
     this.tint = const Color(0x0DFFFFFF),
     this.live = false,
+    this.refraction = Refraction.lens,
     super.child,
   });
 
   final double radius;
   final Color tint;
   final bool live;
+  final Refraction refraction;
 
-  static ui.FragmentProgram? _program;
+  static final _programs = <Refraction, ui.FragmentProgram>{};
 
   static Future<void> load() async {
-    try {
-      _program = await ui.FragmentProgram.fromAsset('packages/meniscus/shaders/meniscus.frag');
-    } catch (e) {
-      debugPrint('meniscus: $e');
+    for (final (r, path) in const [
+      (Refraction.lens, 'packages/meniscus/shaders/meniscus.frag'),
+      (Refraction.edge, 'packages/meniscus/shaders/meniscus_edge.frag'),
+    ]) {
+      try {
+        _programs[r] = await ui.FragmentProgram.fromAsset(path);
+      } catch (e) {
+        debugPrint('meniscus: $e');
+      }
     }
   }
 
   @override
   RenderObject createRenderObject(BuildContext context) => RenderLens(
-        radius: radius,
-        tint: tint,
-        live: live,
-        backdrop: GlassBackdrop.maybeOf(context),
-      )..scroll = Scrollable.maybeOf(context)?.position;
+    radius: radius,
+    tint: tint,
+    live: live,
+    refraction: refraction,
+    backdrop: GlassBackdrop.maybeOf(context),
+  )..scroll = Scrollable.maybeOf(context)?.position;
 
   @override
   void updateRenderObject(BuildContext context, RenderLens renderObject) => renderObject
     ..radius = radius
     ..tint = tint
     ..live = live
+    ..refraction = refraction
     ..backdrop = GlassBackdrop.maybeOf(context)
     ..scroll = Scrollable.maybeOf(context)?.position;
 }
 
 class RenderLens extends RenderProxyBox {
-  RenderLens({required this._radius, required this._tint, this._live = false, this._backdrop});
+  RenderLens({
+    required this._radius,
+    required this._tint,
+    this._live = false,
+    this._refraction = Refraction.lens,
+    this._backdrop,
+  });
 
   ui.FragmentShader? _shader;
   ui.Image? _last;
@@ -72,6 +89,15 @@ class RenderLens extends RenderProxyBox {
     if (v == _live) return;
     _live = v;
     markNeedsCompositingBitsUpdate();
+    markNeedsPaint();
+  }
+
+  Refraction _refraction;
+  set refraction(Refraction v) {
+    if (v == _refraction) return;
+    _refraction = v;
+    _shader?.dispose();
+    _shader = null;
     markNeedsPaint();
   }
 
@@ -156,12 +182,13 @@ class RenderLens extends RenderProxyBox {
       if (live != null) {
         final filter = (_filterLayer.layer ??= BackdropFilterLayer())..filter = ui.ImageFilter.shader(live);
         _clipLayer.layer = context.pushClipRRect(
-            needsCompositing,
-            offset,
-            Offset.zero & size,
-            RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(_radius)),
-            (ctx, o) => ctx.pushLayer(filter, super.paint, o),
-            oldLayer: _clipLayer.layer);
+          needsCompositing,
+          offset,
+          Offset.zero & size,
+          RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(_radius)),
+          (ctx, o) => ctx.pushLayer(filter, super.paint, o),
+          oldLayer: _clipLayer.layer,
+        );
         return;
       }
     }
@@ -176,15 +203,24 @@ class RenderLens extends RenderProxyBox {
       final pic = rec.endRecording();
       final img = pic.toImageSync(w, h);
       pic.dispose();
-      canvas.drawImageRect(img, Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()), offset & size,
-          Paint()..filterQuality = FilterQuality.low);
+      canvas.drawImageRect(
+        img,
+        Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
+        offset & size,
+        Paint()..filterQuality = FilterQuality.low,
+      );
       // 上屏那帧才真正画出来,马上释放会整块消失,留到下次重画再放。
       _last?.dispose();
       _last = img;
     }
     if (child == null) return;
-    context.pushClipRRect(needsCompositing, offset, Offset.zero & size,
-        RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(_radius)), super.paint);
+    context.pushClipRRect(
+      needsCompositing,
+      offset,
+      Offset.zero & size,
+      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(_radius)),
+      super.paint,
+    );
   }
 
   // 外面套着 BackdropFilter 时,背后画面和 FlutterFragCoord 都以它为原点。
@@ -222,7 +258,7 @@ class RenderLens extends RenderProxyBox {
   }
 
   ui.FragmentShader? _prepare(double dpr, {required bool live}) {
-    final program = LensGlass._program;
+    final program = LensGlass._programs[_refraction];
     if (program == null || size.isEmpty) return null;
     final img = _backdrop?.image;
     var local = Rect.zero;
@@ -252,14 +288,20 @@ class RenderLens extends RenderProxyBox {
     f(local.height);
     f(_radius);
     f(bevel);
-    final lensBevel = math.max(1.0, math.min(37.0, (size.shortestSide / 2).floorToDouble() - 1));
-    f(_ior);
-    f(lensBevel);
-    f(_slab);
-    f(_slope);
-    f(_bend(0, lensBevel));
-    f(1.6);
-    f(.86);
+    if (_refraction == Refraction.edge) {
+      f(1.44);
+      f(1.75);
+      f(.03);
+    } else {
+      final lensBevel = math.max(1.0, math.min(37.0, (size.shortestSide / 2).floorToDouble() - 1));
+      f(_ior);
+      f(lensBevel);
+      f(_slab);
+      f(_slope);
+      f(_bend(0, lensBevel));
+      f(1.6);
+      f(.86);
+    }
     f(_tint.r);
     f(_tint.g);
     f(_tint.b);

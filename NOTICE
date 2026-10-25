@@ -8,7 +8,8 @@ See LICENSE for the full text.
 ------------------------------------------------------------------------------------------------
 Third-party code
 
-shaders/meniscus.frag contains code ported from:
+shaders/meniscus.frag contains code ported from (1) and (2) below.
+shaders/meniscus_edge.frag contains code ported from (1) only.
 
 1. qiaosi — components/liquid-glass/liquid-core.js (material tint, GGX highlights, height field)
    https://github.com/TangfanOVO/qiaosi

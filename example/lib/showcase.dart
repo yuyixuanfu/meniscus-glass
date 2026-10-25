@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:meniscus/meniscus.dart';
 
 import 'look.dart';
 import 'phone.dart';
@@ -23,63 +24,65 @@ class _ShowcaseState extends State<Showcase> {
   }
 
   void _openSettings() => showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        builder: (_) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-          child: Controls(look: _look),
-        ),
-      );
+    context: context,
+    showDragHandle: true,
+    builder: (_) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Controls(look: _look),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: LayoutBuilder(builder: (context, box) {
-          if (box.maxWidth < 760) {
-            return ValueListenableBuilder(
-              valueListenable: _look,
-              builder: (_, look, _) => Phone(look: look, onSettings: _openSettings),
-            );
-          }
-          final h = math.min(box.maxHeight - 48, 844.0);
-          final w = h * 390 / 844;
-          return ColoredBox(
-            color: const Color(0xFFEDEEF1),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: w,
-                      height: h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(44),
-                        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 40, offset: Offset(0, 16))],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(44),
-                        child: MediaQuery(
-                          data: MediaQuery.of(context).copyWith(padding: const EdgeInsets.only(top: 44, bottom: 24)),
-                          child: ValueListenableBuilder(
-                            valueListenable: _look,
-                            builder: (_, look, _) => Phone(look: look),
-                          ),
+    body: LayoutBuilder(
+      builder: (context, box) {
+        if (box.maxWidth < 760) {
+          return ValueListenableBuilder(
+            valueListenable: _look,
+            builder: (_, look, _) => Phone(look: look, onSettings: _openSettings),
+          );
+        }
+        final h = math.min(box.maxHeight - 48, 844.0);
+        final w = h * 390 / 844;
+        return ColoredBox(
+          color: const Color(0xFFEDEEF1),
+          child: Row(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Container(
+                    width: w,
+                    height: h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(44),
+                      boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 40, offset: Offset(0, 16))],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(44),
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(padding: const EdgeInsets.only(top: 44, bottom: 24)),
+                        child: ValueListenableBuilder(
+                          valueListenable: _look,
+                          builder: (_, look, _) => Phone(look: look),
                         ),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  width: 340,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 48, 32, 32),
-                    child: Controls(look: _look, header: true),
-                  ),
+              ),
+              SizedBox(
+                width: 340,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 48, 32, 32),
+                  child: Controls(look: _look, header: true),
                 ),
-              ],
-            ),
-          );
-        }),
-      );
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
 
 class Controls extends StatelessWidget {
@@ -101,8 +104,10 @@ class Controls extends StatelessWidget {
           if (header) ...[
             Text('meniscus', style: text.headlineMedium),
             const SizedBox(height: 4),
-            Text('Liquid glass for Flutter. The rim bends what is behind it; the middle stays clear.',
-                style: text.bodyMedium),
+            Text(
+              'Liquid glass for Flutter. The rim bends what is behind it; the middle stays clear.',
+              style: text.bodyMedium,
+            ),
             const SizedBox(height: 28),
           ],
           Text('Backdrop', style: text.labelLarge),
@@ -120,16 +125,39 @@ class Controls extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
+          Text('Refraction', style: text.labelLarge),
+          const SizedBox(height: 8),
+          SegmentedButton<Refraction>(
+            segments: const [
+              ButtonSegment(value: Refraction.lens, label: Text('Lens')),
+              ButtonSegment(value: Refraction.edge, label: Text('Edge')),
+            ],
+            selected: {l.refraction},
+            onSelectionChanged: (v) => look.value = l.copyWith(refraction: v.first),
+          ),
+          const SizedBox(height: 20),
           Text('Corner radius  ${l.radius.round()}', style: text.labelLarge),
-          Slider(min: 8, max: 32, value: l.radius, onChanged: (v) => look.value = l.copyWith(radius: v)),
+          Slider(
+            min: 8,
+            max: 32,
+            value: l.radius,
+            onChanged: (v) => look.value = l.copyWith(radius: v),
+          ),
           Text('Film  ${(l.film * 100).round()}%', style: text.labelLarge),
-          Slider(min: 0, max: .3, value: l.film, onChanged: (v) => look.value = l.copyWith(film: v)),
+          Slider(
+            min: 0,
+            max: .3,
+            value: l.film,
+            onChanged: (v) => look.value = l.copyWith(film: v),
+          ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Read the live backdrop'),
-            subtitle: Text(liveSupported
-                ? 'Top bar and input bar bend whatever scrolls behind them.'
-                : 'Not available on this renderer. Floating glass bends the backdrop image instead.'),
+            subtitle: Text(
+              liveSupported
+                  ? 'Top bar and input bar bend whatever scrolls behind them.'
+                  : 'Not available on this renderer. Floating glass bends the backdrop image instead.',
+            ),
             value: l.live && liveSupported,
             onChanged: liveSupported ? (v) => look.value = l.copyWith(live: v) : null,
           ),

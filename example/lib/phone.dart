@@ -45,6 +45,7 @@ class Phone extends StatelessWidget {
                     child: LensGlass(
                       radius: look.radius,
                       tint: look.tint,
+                      refraction: look.refraction,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         child: Text(text, style: ink),
@@ -66,12 +67,15 @@ class Phone extends StatelessWidget {
                 LensGlass(
                   radius: 22,
                   tint: look.tint,
+                  refraction: look.refraction,
                   live: look.live,
                   child: SizedBox(
                     height: 44,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Center(child: Text('meniscus', style: ink.copyWith(fontWeight: FontWeight.w600))),
+                      child: Center(
+                        child: Text('meniscus', style: ink.copyWith(fontWeight: FontWeight.w600)),
+                      ),
                     ),
                   ),
                 ),
@@ -90,6 +94,7 @@ class Phone extends StatelessWidget {
             child: LensGlass(
               radius: 26,
               tint: look.tint,
+              refraction: look.refraction,
               live: look.live,
               child: SizedBox(
                 height: 52,
@@ -97,7 +102,9 @@ class Phone extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 20, right: 8),
                   child: Row(
                     children: [
-                      Expanded(child: Text('Message', style: ink.copyWith(color: look.backdrop.ink.withValues(alpha: .55)))),
+                      Expanded(
+                        child: Text('Message', style: ink.copyWith(color: look.backdrop.ink.withValues(alpha: .55))),
+                      ),
                       Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(Icons.arrow_upward, size: 20, color: look.backdrop.ink),
@@ -125,12 +132,16 @@ class _Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: LensGlass(
-          radius: size / 2,
-          tint: look.tint,
-          live: look.live,
-          child: SizedBox.square(dimension: size, child: Icon(icon, size: size * .42, color: look.backdrop.ink)),
-        ),
-      );
+    onTap: onTap,
+    child: LensGlass(
+      radius: size / 2,
+      tint: look.tint,
+      refraction: look.refraction,
+      live: look.live,
+      child: SizedBox.square(
+        dimension: size,
+        child: Icon(icon, size: size * .42, color: look.backdrop.ink),
+      ),
+    ),
+  );
 }
